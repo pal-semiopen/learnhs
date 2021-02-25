@@ -94,3 +94,14 @@ termToString term =
     Var v -> v
     App a b -> "(" ++ (termToString a) ++ " " ++ (termToString b) ++ ")"
     Lam v t -> "(λ " ++ v ++ ". " ++ (termToString t) ++ ")"
+
+replace x t1 t2 = 
+  case t1 of
+    Var v   -> if v == x then t2 else Ver v
+    App a b -> App (replace x a t2) (replace x b t2)
+    Lam v t -> if v == x then Lam v t else Lam v (replace x t t2)
+
+calc term =
+  case term of
+    App (Lam x t1) t2 -> replace x t1 t2
+    App t1 t2         -> replace
