@@ -132,7 +132,6 @@ showHead xs =
 
 type Variable = String
 data Term = Var Variable | App Term Term | Lam Variable Term  deriving (Show, Eq)
-data Status = Complete Term | Incomplete [Status] | Waiting String
 
 bracketStart = "("
 bracketEnd   = ")"
@@ -191,27 +190,18 @@ joinTerms (t1:t2:ts) = joinTerms $ ((App<$>t1<*>t2) : ts)
 joinResult r (lr,ll) = (r:lr, ll)
 
 readStr :: String -> ([Maybe Term], String)
-readStr raw = 
-    let str     = compress $ strip
-                  $ spaceBefore bracketStart 
-                  $ spaceBefore bracketEnd 
-                  $ spaceBefore lambdaStart 
-                  $ spaceBefore lambdaEnd 
-                  $ raw
-    in  if str == ""
-        then ([],"")
-        else
-          if bracketStart `isPrefixOf` str
-          then (\(r, l) -> joinTerms r `joinResult` readStr l) $ readStr (dropX bracketEnd str)
-          else 
-            if bracketEnd `isPrefixOf` str
-            then ([], dropX bracketStart str)
-            else
-              if lambdaStart `isPrefixOf` str
-              then let  args = findArgs $ getStrFromFirstX lambdaStart $ getStrUntilFirstX lambdaEnd str
-                        (leftResult, leftLeft) = readStr $ getStrFromFirstX lambdaEnd str
-                    in  (([args <$> (joinTerms leftResult)]), leftLeft)
-              else (Just $ Var $ getStrUntilFirstX " " str) `joinResult` readStr (getStrFromFirstX " " str)
+readStr raw
+    | str == ""                     = ([],"")
+    | bracketStart `isPrefixOf` str = (\(r, l) -> joinTerms r `joinResult` readStr l) $ readStr (dropX bracketEnd str)
+    | bracketEnd `isPrefixOf` str   = ([], dropX bracketStart str)
+    | lambdaStart `isPrefixOf` str  = let args = findArgs $ getStrFromFirstX lambdaStart $ getStrUntilFirstX lambdaEnd str; (leftResult, leftLeft)     = readStr $ getStrFromFirstX lambdaEnd str in  (([args <$> (joinTerms leftResult)]), leftLeft)
+    | otherwise                     = (Just $ Var $ getStrUntilFirstX " " str) `joinResult` readStr (getStrFromFirstX " " str)
+    where str     = compress $ strip
+                    $ spaceBefore bracketStart 
+                    $ spaceBefore bracketEnd 
+                    $ spaceBefore lambdaStart 
+                    $ spaceBefore lambdaEnd 
+                    $ raw
 
 termToString term =
   case term of
