@@ -29,13 +29,19 @@ split_by_close = \s -> case s of
 
 
 
-str_to_strtree :: String -> Maybe StrTree
+str_to_strtree :: String -> Maybe [StrTree]
 str_to_strtree = \s -> case s of
-    []     -> (Just(Tree []))
+    []     -> (Just [])
     '(':s' -> case split_by_close s' of
+      Nothing 　　　　　-> Nothing
+      Just split_pair  -> case str_to_strtree (fst split_pair) of --括弧の中
+        Nothing          -> Nothing
+        Just inside_tree -> case str_to_strtree (snd split_pair) of     --括弧閉じの後ろ側
+          Nothing              -> Nothing
+          Just following_trees -> (Just((Tree inside_tree) : following_trees))
+    x:s'   -> case str_to_strtree s' of
       Nothing -> Nothing
-      Just x  -> (Just(str_to_strtree (fst x) : (str_to_strtree (snd x))))
-    x:s'   -> (Just((Chr x):(str_to_strtree s')))
+      Just t  -> (Just((Chr x):t))
 
 {-
 
