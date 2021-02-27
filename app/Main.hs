@@ -30,7 +30,7 @@ split_by_close = \s -> case s of
 
 
 str_to_strtree :: String -> Maybe [StrTree]
-str_to_strtree = \s -> case s of
+str_to_strtree = \s -> case s of     --例のMaybe monad の話で大分綺麗になる気がする
     []     -> (Just [])
     '(':s' -> case split_by_close s' of
       Nothing 　　　　　-> Nothing
@@ -42,6 +42,18 @@ str_to_strtree = \s -> case s of
     x:s'   -> case str_to_strtree s' of
       Nothing -> Nothing
       Just t  -> (Just((Chr x):t))
+
+strtree_to_str::StrTree -> String --デバッガ
+strtree_to_str = \t -> case t of
+  Tree t' -> ("("++(to_str_each strtree_to_str t')++")")
+  Chr  c  -> [c]
+
+to_str_each :: (a -> String) -> [a] -> String  --デバッガ補助
+to_str_each = \f vec -> case vec of        --listをmonadとして使えばよいのでは？？
+  []   -> []
+  x:v' -> ((f x)++(to_str_each f v'))
+
+
 
 {-
 
